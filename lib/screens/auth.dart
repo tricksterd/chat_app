@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,10 +20,12 @@ class _AuthScreenState extends State<AuthScreen> {
   final _form = GlobalKey<FormState>();
 
   bool _isLogin = true;
+  bool _isAuthenticating = false;
+
   String _enteredEmail = '';
   String _enteredPassword = '';
+  String _enteredUsername = '';
   File? _selectedImage;
-  bool _isAuthenticating = false;
 
   void _submit() async {
     final isValid = _form.currentState!.validate();
@@ -45,7 +48,17 @@ class _AuthScreenState extends State<AuthScreen> {
             .ref()
             .child('user_images')
             .child('${userCredentials.user!.uid}.jpg');
-        final imageUrl = storageRef.putFile(_selectedImage!);
+        await storageRef.putFile(_selectedImage!);
+        final imageUrl = await storageRef.getDownloadURL();
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredentials.user!.uid)
+            .set({
+          'username': _enteredUsername,
+          'email': _enteredEmail,
+          'imageUrl': imageUrl
+        });
       }
     } on FirebaseAuthException catch (error) {
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -53,9 +66,11 @@ class _AuthScreenState extends State<AuthScreen> {
         content: Text(error.message ?? 'Authentication failed.'),
       ));
     }
-    setState(() {
-      _isAuthenticating = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isAuthenticating = false;
+      });
+    }
   }
 
   @override
@@ -87,6 +102,23 @@ class _AuthScreenState extends State<AuthScreen> {
                             UserImagePicker(
                               onPickImage: (pickedImage) {
                                 _selectedImage = pickedImage;
+                              },
+                            ),
+                          if (!_isLogin)
+                            TextFormField(
+                              decoration:
+                                  const InputDecoration(labelText: 'Username'),
+                              enableSuggestions: false,
+                              validator: (value) {
+                                if (value == null ||
+                                    value.isEmpty ||
+                                    value.trim().length < 4) {
+                                  return 'Please enter at least 4 characters.';
+                                }
+                                return null;
+                              },
+                              onSaved: (value) {
+                                _enteredUsername = value!;
                               },
                             ),
                           TextFormField(
