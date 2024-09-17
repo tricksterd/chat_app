@@ -62,16 +62,20 @@ class MessageBubble extends StatelessWidget {
                     ),
                   Container(
                     decoration: BoxDecoration(
-                        color: isMe
-                            ? Colors.grey[300]
-                            : theme.colorScheme.secondary.withAlpha(200),
-                        borderRadius: BorderRadius.only(
-                            topLeft: !isMe && isFirstInSequence
-                                ? Radius.zero
-                                : const Radius.circular(12),
-                            topRight: isMe && isFirstInSequence
-                                ? Radius.zero
-                                : const Radius.circular(12))),
+                      color: isMe
+                          ? Colors.grey[300]
+                          : theme.colorScheme.secondary.withAlpha(200),
+                      borderRadius: BorderRadius.only(
+                        topLeft: !isMe && isFirstInSequence
+                            ? Radius.zero
+                            : const Radius.circular(12),
+                        topRight: isMe && isFirstInSequence
+                            ? Radius.zero
+                            : const Radius.circular(12),
+                        bottomLeft: const Radius.circular(12),
+                        bottomRight: const Radius.circular(12),
+                      ),
+                    ),
                     constraints: const BoxConstraints(maxWidth: 200),
                     padding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 14),
